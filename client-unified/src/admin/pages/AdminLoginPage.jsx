@@ -24,7 +24,7 @@ export default function AdminLoginPage() {
       setIsLoading(true);
       try {
         await loginAdmin({ email, password });
-        navigate("/pithad/dashboard");
+        navigate("/lath/dashboard");
       } catch (error) {
         console.error("Login failed", error);
       } finally {
@@ -94,7 +94,7 @@ export default function AdminLoginPage() {
                     <button
                         type="button"
                         className="text-amber-600 font-bold text-sm hover:underline"
-                        onClick={() => navigate("/pithad/signup")}
+                        onClick={() => navigate("/lath/signup")}
                     >
                         Create Root Admin Account
                     </button>

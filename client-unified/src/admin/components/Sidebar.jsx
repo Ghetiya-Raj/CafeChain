@@ -14,15 +14,15 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-    { to: "/pithad/dashboard", label: "Dashboard", Icon: Home },
-    { to: "/pithad/cafes/approval-queue", label: "Approvals", Icon: FileCheck },
-    { to: "/pithad/cafes", label: "Cafes", Icon: Building },
-    { to: "/pithad/users", label: "Users", Icon: Users },
-    { to: "/pithad/events", label: "Events", Icon: Calendar },
-    { to: "/pithad/contact-submissions", label: "Messages", Icon: MessageCircle },
-    { to: "/pithad/analytics", label: "Analytics", Icon: BarChart2 },
-    { to: "/pithad/promotions", label: "Promotions", Icon: Gift },
-    { to: "/pithad/invoices", label: "Invoices", Icon: FileText },
+    { to: "/lath/dashboard", label: "Dashboard", Icon: Home },
+    { to: "/lath/cafes/approval-queue", label: "Approvals", Icon: FileCheck },
+    { to: "/lath/cafes", label: "Cafes", Icon: Building },
+    { to: "/lath/users", label: "Users", Icon: Users },
+    { to: "/lath/events", label: "Events", Icon: Calendar },
+    { to: "/lath/contact-submissions", label: "Messages", Icon: MessageCircle },
+    { to: "/lath/analytics", label: "Analytics", Icon: BarChart2 },
+    { to: "/lath/promotions", label: "Promotions", Icon: Gift },
+    { to: "/lath/invoices", label: "Invoices", Icon: FileText },
 ];
 
 export default function Sidebar() {
@@ -49,7 +49,7 @@ export default function Sidebar() {
               // ✅ CUSTOM LOGIC: 
               // If we are on the "Approvals" page, explicitly force the "Cafes" link to be inactive
               // regardless of what React Router says.
-              const isCafesLink = item.to === "/pithad/cafes";
+              const isCafesLink = item.to === "/lath/cafes";
               const isOnApprovalPage = location.pathname.includes("/approval-queue");
               
               const finalActive = isCafesLink && isOnApprovalPage ? false : isActive;
@@ -63,7 +63,7 @@ export default function Sidebar() {
           >
             {({ isActive }) => {
                 // ✅ Apply the same logic to the Icon styling inside
-                const isCafesLink = item.to === "/pithad/cafes";
+                const isCafesLink = item.to === "/lath/cafes";
                 const isOnApprovalPage = location.pathname.includes("/approval-queue");
                 const finalActive = isCafesLink && isOnApprovalPage ? false : isActive;
 

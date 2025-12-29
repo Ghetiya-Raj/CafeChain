@@ -52,7 +52,7 @@ export default function UserLookupPage() {
                         {filteredUsers.length > 0 ? (
                             filteredUsers.map((user) => (
                                 <li key={user._id} className="hover:bg-gray-50 transition-colors group">
-                                    <Link to={`/pithad/users/${user._id}`} className="p-4 flex justify-between items-center">
+                                    <Link to={`/lath/users/${user._id}`} className="p-4 flex justify-between items-center">
                                         <div className="flex items-center gap-4">
                                             <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-sm">
                                                 {user.name?.charAt(0)}

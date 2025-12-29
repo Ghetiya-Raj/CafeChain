@@ -56,7 +56,7 @@ export default function KPISection() {
         value={stats.totalUsers} 
         icon={Users} 
         colorClass="text-blue-600"
-        onClick={() => navigate('/pithad/users')}
+        onClick={() => navigate('/lath/users')}
       />
       
       <Card 
@@ -65,7 +65,7 @@ export default function KPISection() {
         icon={Store} 
         colorClass="text-green-600"
         subtext="+ Registered Partners"
-        onClick={() => navigate('/pithad/cafes')}
+        onClick={() => navigate('/lath/cafes')}
       />
 
       <Card 
@@ -83,7 +83,7 @@ export default function KPISection() {
         colorClass="text-orange-600"
         subtext="Needs Attention"
         borderClass="ring-2 ring-orange-100"
-        onClick={() => navigate('/pithad/cafes/approval-queue')}
+        onClick={() => navigate('/lath/cafes/approval-queue')}
       />
     </div>
   );

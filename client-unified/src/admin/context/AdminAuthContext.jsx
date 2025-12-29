@@ -32,7 +32,7 @@ export function useAdminAuth() {
     
     setAdmin(null);
     
-    navigate('/pithad/login'); 
+    navigate('/lath/login'); 
   };
 
   return { admin, logout };

@@ -28,7 +28,7 @@ export default function CafeListPage() {
     }, []);
 
     const handleRowClick = (cafe) => {
-        navigate(`/pithad/cafes/${cafe._id}`);
+        navigate(`/lath/cafes/${cafe._id}`);
     };
 
     const filteredCafes = cafes.filter(cafe => {

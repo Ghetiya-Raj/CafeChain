@@ -92,7 +92,7 @@ const ClaimRewardPage = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const allowedTypes = ["image/jpeg", "image/png", "application/pithadf"];
+    const allowedTypes = ["image/jpeg", "image/png", "application/lathf"];
     const allowedExtensions = /(\.jpg|\.jpeg|\.png|\.pdf)$/i;
 
     if (allowedTypes.includes(file.type) && allowedExtensions.test(file.name)) {

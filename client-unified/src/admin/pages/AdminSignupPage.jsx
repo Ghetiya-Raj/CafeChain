@@ -15,7 +15,7 @@ export default function AdminSignupPage() {
       const isAdminCreated = await checkAdminExists();
       if (isAdminCreated) {
         toast.error("An admin account already exists.");
-        navigate("/pithad/login");
+        navigate("/lath/login");
       }
     };
     verifyAdminStatus();
@@ -27,7 +27,7 @@ export default function AdminSignupPage() {
       try {
         await registerAdmin({ name, email, password });
         toast.success("Account created! Please log in.");
-        navigate("/pithad/login");
+        navigate("/lath/login");
       } catch (error) {
         console.error("Signup failed", error);
         toast.error("Registration failed.");

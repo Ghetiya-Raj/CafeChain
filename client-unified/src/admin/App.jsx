@@ -43,7 +43,7 @@ export default function AdminApp() {
           {/* --- Protected Routes --- */}
           <Route element={<AdminProtectedRoute />}>
             <Route element={<AdminLayout />}>
-              <Route index element={<DashboardPage />} /> {/* Default route for /pithad */}
+              <Route index element={<DashboardPage />} /> {/* Default route for /lath */}
               <Route path="dashboard" element={<DashboardPage />} />
               <Route path="events" element={<EventManagementPage />} />
               <Route path="/contact-submissions" element={<ContactSubmissionsPage />} /> 

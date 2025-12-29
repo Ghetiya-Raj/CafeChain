@@ -50,7 +50,7 @@ export default function Header() {
           title: 'New Cafe Approval',
           message: `${cafe.name} registered and is waiting for review.`,
           time: new Date(cafe.createdAt),
-          link: '/pithad/cafes/approval-queue'
+          link: '/lath/cafes/approval-queue'
         });
       });
 
@@ -64,7 +64,7 @@ export default function Header() {
           title: 'New Inquiry',
           message: `${msg.username}: ${msg.subject.substring(0, 30)}...`,
           time: new Date(msg.createdAt),
-          link: '/pithad/contact-submissions'
+          link: '/lath/contact-submissions'
         });
       });
 
@@ -78,7 +78,7 @@ export default function Header() {
           title: 'Reward Redemption',
           message: `${claim.user?.name || 'User'} claimed ₹${claim.amount}`,
           time: new Date(claim.createdAt || Date.now()), // Fallback if createdAt missing
-          link: '/pithad/invoices'
+          link: '/lath/invoices'
         });
       });
 

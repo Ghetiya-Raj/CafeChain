@@ -8,7 +8,7 @@ const AdminProtectedRoute = () => {
 
   // If token exists, render the child routes.
   // Otherwise, redirect to the correct login page URL.
-  return adminToken ? <Outlet /> : <Navigate to="/pithad/login" replace />;
+  return adminToken ? <Outlet /> : <Navigate to="/lath/login" replace />;
 };
 
 export default AdminProtectedRoute;

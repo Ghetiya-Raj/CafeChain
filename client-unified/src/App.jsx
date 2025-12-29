@@ -20,7 +20,7 @@ function App() {
         {/* Cafe frontend routes - accessible at /cafe/* */}
         <Route path="/cafe/*" element={<CafeApp />} />
 
-        <Route path="/pithad/*" element={<AdminApp />} />
+        <Route path="/lath/*" element={<AdminApp />} />
 
         
         {/* Default redirect to user frontend */}
