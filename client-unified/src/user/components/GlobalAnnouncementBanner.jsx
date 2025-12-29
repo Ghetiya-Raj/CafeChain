@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Megaphone, AlertCircle } from "lucide-react";
+import { Megaphone } from "lucide-react";
 import { getAnnouncements } from "../api/api";
 
 const GlobalAnnouncementBanner = () => {
@@ -12,83 +12,86 @@ const GlobalAnnouncementBanner = () => {
     const fetchData = async () => {
       try {
         const data = await getAnnouncements();
-        // If data exists, use it. Otherwise fallback to defaults if you want, or show nothing.
-        if (data && data.length > 0) {
-          setAnnouncements(data);
-        } else {
-            // Optional: Fallback defaults if DB is empty
-           setAnnouncements([]); 
-        }
-      } catch (error) {
+        setAnnouncements(Array.isArray(data) ? data : []);
+      } catch (err) {
         console.error("Failed to load announcements");
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
-  // Auto-rotate logic
   useEffect(() => {
     if (announcements.length <= 1) return;
-    
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % announcements.length);
-    }, 5000); // 5 seconds per slide
-
+      setCurrentIndex((i) => (i + 1) % announcements.length);
+    }, 5000);
     return () => clearInterval(interval);
   }, [announcements.length]);
 
   if (loading || announcements.length === 0) return null;
 
-  const currentItem = announcements[currentIndex];
+  const item = announcements[currentIndex];
 
   return (
     <motion.section
-      className="py-3 bg-[#4A3A2F] border-b border-amber-900/50"
-      initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: "auto" }}
-      transition={{ duration: 0.5 }}
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="w-full border-b border-white/10 
+                 bg-gradient-to-r from-[#3A2C23] via-[#4A3A2F] to-[#3A2C23]"
     >
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex flex-col items-center justify-center gap-3">
-        {/* <Megaphone className="w-6 h-6 text-amber-400 shrink-0 hidden md:block" /> */}
-          <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-white/10 shadow-sm border border-white/5">
-            <Megaphone className="w-5 h-5 text-amber-400" strokeWidth={2} />
-          </div>
+      <div className="max-w-7xl mx-auto px-4 py-3">
+        <div className="flex items-start sm:items-center gap-3">
           
-          <div className="relative w-full max-w-2xl overflow-hidden text-center h-8 md:h-8">
+          {/* Icon */}
+          <div className="flex-shrink-0 w-9 h-9 rounded-full 
+                          bg-amber-400/10 border border-amber-400/20 
+                          flex items-center justify-center">
+            <Megaphone className="w-4 h-4 text-amber-400" />
+          </div>
+
+          {/* Text */}
+          <div className="relative w-full overflow-hidden">
             <AnimatePresence mode="wait">
               <motion.div
-                key={currentItem._id || currentIndex}
-                initial={{ opacity: 0, y: 20 }}
+                key={item._id || currentIndex}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-                className="absolute w-full flex flex-col md:flex-row items-center justify-center gap-2"
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.35 }}
+                className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2"
               >
-                <span className="text-amber-200 font-bold uppercase text-sm md:text-base tracking-wide">
-                  {currentItem.title}:
+                <span className="inline-block text-xs sm:text-sm 
+                                 font-semibold tracking-wide uppercase
+                                 text-amber-300 bg-amber-300/10 
+                                 px-2 py-0.5 rounded-md w-fit">
+                  {item.title}
                 </span>
-                <span className="text-white text-sm md:text-base font-medium truncate max-w-xs md:max-w-full">
-                  {currentItem.body}
-                </span>
+
+                <p className="text-white text-sm sm:text-base 
+                              leading-snug break-words">
+                  {item.body}
+                </p>
               </motion.div>
             </AnimatePresence>
           </div>
         </div>
-        
-        {/* Pagination Dots (Optional, for visual cue) */}
+
+        {/* Dots */}
         {announcements.length > 1 && (
-            <div className="flex justify-center gap-1 mt-1">
-                {announcements.map((_, idx) => (
-                    <div 
-                        key={idx} 
-                        className={`w-1.5 h-1.5 rounded-full transition-all ${idx === currentIndex ? 'bg-amber-400 w-3' : 'bg-gray-600'}`}
-                    />
-                ))}
-            </div>
+          <div className="flex justify-center gap-1.5 mt-2">
+            {announcements.map((_, i) => (
+              <span
+                key={i}
+                className={`h-1.5 rounded-full transition-all duration-300
+                  ${i === currentIndex 
+                    ? "w-4 bg-amber-400" 
+                    : "w-1.5 bg-white/30"}`}
+              />
+            ))}
+          </div>
         )}
       </div>
     </motion.section>

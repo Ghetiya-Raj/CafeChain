@@ -12,8 +12,10 @@ const {
     getPendingCafes,
     getAllUsers,
     getUserProfile,
+    deleteUser,
     getAllCafes,
     getCafeDetails,
+    deleteCafe,
     approveCafe,
     rejectCafe,
     createEvent,
@@ -41,11 +43,13 @@ router.put("/claims/:id/reject", rejectClaim);
 
 router.get("/users/all", getAllUsers);
 router.get("/users/:id", getUserProfile);
+router.delete("/users/:id", deleteUser);
 
 // ✅ FIXED: Place the specific 'pending' route before the generic ':id' route
 router.get("/cafes/pending", getPendingCafes);
 router.get("/cafes/all", getAllCafes);
 router.get("/cafes/:id", getCafeDetails);
+router.delete("/cafes/:id", deleteCafe);
 
 // --- Cafe Approval Routes ---
 router.put("/cafes/:id/approve", approveCafe);

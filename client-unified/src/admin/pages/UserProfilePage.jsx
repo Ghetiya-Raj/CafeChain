@@ -4,26 +4,26 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import UserProfileTabs from "../components/UserProfileTabs";
 import Loader from "../components/Loader";
-import { adminGetUserById } from "../api/api";
+import { adminGetUserById, adminDeleteUser } from "../api/api";
 import { ArrowLeft } from "lucide-react";
 
 export default function UserProfilePage() {
-    const { userId } = useParams();
+    const { id } = useParams();
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchUserProfile = async () => {
-            if (!userId) return;
+            if (!id) return;
             try {
-                const userData = await adminGetUserById(userId);
+                const userData = await adminGetUserById(id);
                 setUser(userData);
             } catch (err) { toast.error("Could not load user data."); } 
             finally { setIsLoading(false); }
         };
         fetchUserProfile();
-    }, [userId]);
+    }, [id]);
 
     if (isLoading) return <Loader />;
     if (!user) return <div className="text-center p-8">User not found.</div>;
@@ -33,7 +33,23 @@ export default function UserProfilePage() {
              <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-500 hover:text-amber-600 font-medium transition-colors">
                 <ArrowLeft className="w-4 h-4" /> Back to Users
             </button>
-            <UserProfileTabs user={user} />
+            <div className="flex justify-between items-start gap-4">
+                <UserProfileTabs user={user} />
+                <div className="pt-2">
+                    <button
+                        onClick={async () => {
+                            if (!window.confirm('Delete this user and related records?')) return;
+                            try {
+                                await adminDeleteUser(id);
+                                navigate(-1);
+                            } catch (err) { toast.error('Failed to delete user'); }
+                        }}
+                        className="ml-2 flex items-center gap-2 bg-white text-red-600 border border-red-200 px-4 py-2 rounded-xl hover:bg-red-50 transition font-medium"
+                    >
+                        Delete User
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }

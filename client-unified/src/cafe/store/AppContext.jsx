@@ -1,7 +1,8 @@
 import { createContext, useContext, useReducer, useEffect } from 'react';
 import axios from 'axios';
-import { loadFromStorage, saveToStorage } from '../utils/storage';
+import { loadFromStorage, saveToStorage, clearStorage } from '../utils/storage';
 import dummyData from '../assets/data.js';
+import { getAnnouncements } from '../api/api';
 
 // Create context
 const AppContext = createContext();
@@ -64,7 +65,13 @@ function appReducer(state, action) {
         ...state,
         isAuthenticated: true,
         user: { ...action.payload },
-        cafeStatus: action.payload.status // critical for ProtectedRoute
+        cafeStatus: action.payload.status, // critical for ProtectedRoute
+        // Clear any previous cafe-specific state to avoid showing another cafe's data
+        cafeInfo: null,
+        setupCompleted: false,
+        pendingOtp: null,
+        transactions: [],
+        gallery: []
       };
       saveToStorage(newState);
       axios.defaults.headers.common['Authorization'] = `Bearer ${action.payload.token}`;
@@ -75,7 +82,13 @@ function appReducer(state, action) {
       const newState = {
         ...state,
         isAuthenticated: true,
-        user: action.payload
+        user: action.payload,
+        // New registration should not inherit previous cafe data
+        cafeInfo: null,
+        setupCompleted: false,
+        pendingOtp: null,
+        transactions: [],
+        gallery: []
       };
       saveToStorage(newState);
       return newState;
@@ -93,7 +106,11 @@ function appReducer(state, action) {
         metrics: state.metrics,
         performance: state.performance
       };
+      // Remove any persisted token and clear stored app state
+      try { localStorage.removeItem('cafe_token'); } catch (e) {}
       saveToStorage(newState);
+      // Clear default auth header
+      delete axios.defaults.headers.common['Authorization'];
       return newState;
     }
 
@@ -112,6 +129,14 @@ function appReducer(state, action) {
         ...state,
         partnerCafes: action.payload,
       };
+    }
+    case 'SET_ANNOUNCEMENTS': {
+      const newState = {
+        ...state,
+        announcements: action.payload
+      };
+      saveToStorage(newState);
+      return newState;
     }
     
     // Setup completion
@@ -268,6 +293,22 @@ export function AppProvider({ children }) {
 
   useEffect(() => {
     dispatch({ type: 'INIT_APP' });
+  }, []);
+
+  // Fetch public announcements on app init
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        const res = await getAnnouncements();
+        if (res && res.data) {
+          dispatch({ type: 'SET_ANNOUNCEMENTS', payload: res.data });
+        }
+      } catch (err) {
+        // silently fail; keep dummy or persisted announcements
+        console.error('Failed to load announcements:', err);
+      }
+    };
+    fetchAnnouncements();
   }, []);
 
   useEffect(() => {

@@ -84,6 +84,9 @@ export const verifyRedemption = (otp, customerEmail) => {
 // Public Data (Fetches all cafes)
 export const getAllCafes = () => axios.get(`${API_BASE}/cafes`);
 
+// Announcements (public)
+export const getAnnouncements = () => axios.get(`${API_BASE}/announcements`);
+
 // Contact
 export const submitContactForm = (data) => apiClient.post('/contact-us', data);
 

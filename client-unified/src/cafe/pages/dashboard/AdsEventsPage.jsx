@@ -38,8 +38,12 @@ export default function AdsEventsPage() {
   }, []);
 
   useEffect(() => {
-    if (user?._id && filter === 'my_cafe') {
-      setFilteredEvents(allEvents.filter(event => event.cafe?._id === user._id));
+    if (filter === 'my_cafe' && user) {
+      const userId = user.id || user._id || user?.cafeId || user?.id_str;
+      setFilteredEvents(allEvents.filter(event => {
+        const eventCafeId = event?.cafe?._id || event?.cafe || null;
+        return eventCafeId ? String(eventCafeId) === String(userId) : false;
+      }));
     } else {
       setFilteredEvents(allEvents);
     }

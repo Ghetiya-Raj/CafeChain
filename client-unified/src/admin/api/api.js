@@ -80,6 +80,17 @@ export const adminGetUserById = async (userId) => {
   }
 };
 
+export const adminDeleteUser = async (userId) => {
+  try {
+    const { data } = await adminApiClient.delete(`/users/${userId}`);
+    toast.success('User deleted successfully');
+    return data;
+  } catch (error) {
+    toast.error(error.response?.data?.error || 'Failed to delete user');
+    throw error;
+  }
+};
+
 export const adminGetPendingCafes = async () => {
   const { data } = await adminApiClient.get('/cafes/pending');
   return data;
@@ -103,6 +114,17 @@ export const adminGetCafesList = async () => {
 export const adminGetCafeById = async (cafeId) => {
   const { data } = await adminApiClient.get(`/cafes/${cafeId}`);
   return data;
+};
+
+export const adminDeleteCafe = async (cafeId) => {
+  try {
+    const { data } = await adminApiClient.delete(`/cafes/${cafeId}`);
+    toast.success('Cafe deleted successfully');
+    return data;
+  } catch (error) {
+    toast.error(error.response?.data?.error || 'Failed to delete cafe');
+    throw error;
+  }
 };
 
 export const adminUpdateCafeStatus = async (cafeId, status) => {

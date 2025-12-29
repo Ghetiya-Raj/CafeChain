@@ -94,16 +94,7 @@ const PrivacyPolicyPage = () => {
 
                     {/* ... Other sections follow the same pattern ... */}
 
-                    <section>
-                        <h2 className="text-2xl font-bold text-[#4a3a2f] mb-3">Contact Us</h2>
-                        <p>   If you have any questions or concerns about this Privacy Policy, please contact us at:</p>
-                        <div className="mt-4 bg-stone-50 p-4 rounded-lg border border-stone-200">
-                            <p className="font-semibold">CafeChain Customer Support</p>
-                            <p><strong>Email:</strong> team.cafechain@gmail.com</p>
-                            <p><strong>Address:</strong> Surat Gujarat India</p>
-                           
-                        </div>
-                    </section>
+                    
                 </div>
             </div>
         </motion.div>

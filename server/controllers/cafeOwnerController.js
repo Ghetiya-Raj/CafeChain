@@ -12,6 +12,7 @@ const RewardTransaction = require("../models/RewardTransaction");
 const otpGenerator = require("otp-generator");
 const cloudinary = require("../config/cloudinary"); 
 const ContactUs = require("../models/ContactUs"); 
+const twilio = require('twilio');
 
 // ✅ Import the centralized email service
 const { sendEmail } = require('../utils/emailService');
@@ -403,112 +404,85 @@ exports.initiateRedemption = async (req, res) => {
       specialChars: false
     });
 
-    const otpEntry = await OTP.findOneAndUpdate(
-      { email: customer.email, type: 'redemption' },
-      {
-          email: customer.email,
-          otp,
-          type: 'redemption',
-          metadata: { cafeId: cafe._id, userId: customer._id, points: pointsToRedeemNum },
-          expiresAt: Date.now() + 10 * 60 * 1000
-      },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
-    );
+    // Store OTP keyed by email when available, otherwise by phone.
+    const contactKey = customer.email ? { email: customer.email } : { phone: customer.phone };
 
-    const emailHtml = `
-      <!DOCTYPE html>
-      <html lang="en">
+    const otpPayload = {
+      ...contactKey,
+      otp,
+      type: 'redemption',
+      metadata: { cafeId: cafe._id, userId: customer._id, points: pointsToRedeemNum },
+      expiresAt: Date.now() + 10 * 60 * 1000
+    };
+
+    const otpEntry = await OTP.findOneAndUpdate(contactKey, otpPayload, { new: true, upsert: true, setDefaultsOnInsert: true });
+
+    // Prepare a lightweight, clean HTML email (with plain-text fallback)
+    const plainText = `Your CafeChain redemption code for ${cafe.name} is: ${otp}\nIt expires in 10 minutes.`;
+    const FRONTEND_URL = process.env.FRONTEND_URL || process.env.VITE_APP_URL || process.env.VITE_API_BASE_URL || '';
+    const ctaUrl = FRONTEND_URL || '#';
+
+    const emailHtml = `<!doctype html>
+      <html>
       <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <style>
-              /* Basic resets for email clients */
-              body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-              table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-              img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
-              body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; background-color: #f7f5f2; }
-              @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Lato:wght@400;700&display=swap');
-          </style>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <style>
+          body{font-family: Arial, Helvetica, sans-serif; background:#f7f7f2; margin:0; padding:0}
+          .preheader{display:none!important;visibility:hidden;mso-hide:all;font-size:1px;color:#fff;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden}
+          .container{max-width:600px;margin:28px auto;background:#ffffff;padding:20px;border-radius:10px;border:1px solid #f0eaea}
+          .brand{color:#4a3a2f;font-weight:800;font-size:20px;margin-bottom:6px}
+          .lead{color:#444;font-size:15px;margin:8px 0}
+          .muted{color:#6b6b6b;font-size:14px;margin:8px 0}
+          .code{display:block;background:#f9f7f5;border-radius:8px;padding:14px 18px;text-align:center;font-family:monospace;font-size:30px;letter-spacing:6px;margin:18px 0;color:#222}
+          .cta{display:inline-block;background:#4a3a2f;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:700;margin-top:6px}
+          .footer{color:#9a9a9a;font-size:12px;text-align:center;margin-top:14px}
+        </style>
       </head>
-      <body style="font-family: 'Lato', Arial, sans-serif; line-height: 1.6; color: #333333;">
-  
-          <table border="0" cellpadding="0" cellspacing="0" width="100%">
-              <tr>
-                  <td align="center" style="background-color: #f7f5f2;">
-                      <table border="0" cellpadding="20" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; margin: 20px auto; border: 1px solid #e0dccc;">
-                          
-                          <tr>
-                              <td align="center" style="padding: 20px 0 15px 0; border-bottom: 1px solid #eeeeee;">
-                                  <h1 style="font-family: 'Merriweather', serif; font-size: 28px; font-weight: 700; color: #6F4E37; margin: 0;">Your Loyalty, Rewarded!</h1>
-                              </td>
-                          </tr>
-  
-                          <tr>
-                              <td align="left" style="padding: 30px 30px 10px 30px;">
-                                  <h2 style="font-family: 'Merriweather', serif; font-size: 22px; font-weight: bold; margin-top: 0; color: #4a382a;">Ready for your well-deserved treat?</h2>
-                                  <p style="color: #555555; font-size: 16px;">All that loyalty has paid off! You're just a moment away from enjoying something special, on us. Here are the delicious details:</p>
-                              </td>
-                          </tr>
-  
-                          <tr>
-                               <td align="center" style="padding: 10px 30px;">
-                                  <table border="0" cellpadding="15" cellspacing="0" width="100%" style="background-color: #fdfaf5; border-radius: 8px; border: 1px solid #e0dccc;">
-                                      <tr>
-                                          <td align="left" style="font-size: 16px; color: #555555;">
-                                              <strong>Points Redeemed:</strong>
-                                              <span style="float: right; font-weight: bold; color: #333333;">${pointsToRedeemNum}</span>
-                                          </td>
-                                      </tr>
-                                      <tr>
-                                          <td align="left" style="font-size: 16px; color: #555555; border-top: 1px solid #e0dccc;">
-                                              <strong>Your Destination:</strong>
-                                              <span style="float: right; font-weight: bold; color: #333333;">${cafe.name}</span>
-                                          </td>
-                                      </tr>
-                                  </table>
-                              </td>
-                          </tr>
-                          
-                          <tr>
-                              <td align="center" style="padding: 30px;">
-                                  <p style="margin-bottom: 10px; font-size: 16px; color: #555555;">Use this magic code to unlock your treat:</p>
-                                  <div style="border: 2px solid #6F4E37; border-radius: 8px; padding: 15px 25px; display: inline-block;">
-                                      <p style="font-family: 'Courier New', Courier, monospace; font-size: 36px; font-weight: bold; color: #333333; letter-spacing: 5px; margin: 0;">${otp}</p>
-                                  </div>
-                              </td>
-                          </tr>
-  
-                          <tr>
-                              <td align="center" style="padding: 0 30px 20px 30px;">
-                                  <p style="color: #888888; font-size: 14px; margin: 0;">Like a perfect coffee, this code is best served hot! It will expire in <strong>10 minutes</strong>.</p>
-                                  <p style="color: #c0392b; font-size: 14px; font-weight: bold; margin-top: 10px;">Not you? If you didn't request this, please contact our support team immediately to keep your points safe.</p>
-                              </td>
-                          </tr>
-                          
-                          <tr>
-                              <td align="center" style="padding: 20px 30px; border-top: 1px solid #eeeeee;">
-                                  <p style="color: #aaaaaa; font-size: 12px; margin: 0;">Enjoy your reward! © 2025 CafeChain</p>
-                              </td>
-                          </tr>
-  
-                      </table>
-                  </td>
-              </tr>
-          </table>
-  
+      <body>
+        <span class="preheader">Your CafeChain code for ${cafe.name}: ${otp} — expires in 10 minutes.</span>
+        <div class="container">
+          <div class="brand">CafeChain</div>
+          <div class="lead">Hi ${customer.name || 'there'},</div>
+          <div class="muted">Here is your redemption code for <strong>${cafe.name}</strong>. Use it at the counter to claim <strong>${pointsToRedeemNum} points</strong>.</div>
+          <div class="code">${otp}</div>
+          <div style="text-align:center; margin-top:8px;">
+            <a href="${ctaUrl}" class="cta" target="_blank" rel="noreferrer noopener">Open CafeChain</a>
+          </div>
+          <div class="footer">If you did not request this code, please contact the cafe. © CafeChain</div>
+        </div>
       </body>
-      </html>
-    `;
+      </html>`;
 
-    // ✅ Updated to use centralized sendEmail
-    const emailResult = await sendEmail(
-      customer.email, 
-      `Your CafeChain Reward at ${cafe.name} Awaits!`,
-      `Your reward redemption code is ${otp}. Use this to redeem ${pointsToRedeemNum} points at ${cafe.name}.`,
-      emailHtml
-    );
+    const emailResult = customer.email ? await sendEmail(customer.email, `Your CafeChain code for ${cafe.name}`, plainText, emailHtml) : { success: false };
 
-    if (!emailResult.success) {
+    // If email send failed or email is not present, try SMS via Twilio if configured
+    let sendResult = { success: false };
+
+    if (customer.email) {
+      sendResult = emailResult;
+    }
+
+    if (!sendResult.success) {
+      // Attempt SMS fallback when Twilio credentials and customer phone exist
+      if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM && customer.phone) {
+        try {
+          const twClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+          const sms = await twClient.messages.create({
+            body: `Your CafeChain redemption code for ${cafe.name} is ${otp}. It expires in 10 minutes.`,
+            from: process.env.TWILIO_FROM,
+            to: customer.phone
+          });
+          sendResult = { success: true, messageId: sms?.sid };
+        } catch (smsErr) {
+          console.error('Twilio SMS send failed:', smsErr?.message || smsErr);
+          sendResult = { success: false, error: smsErr?.message || smsErr };
+        }
+      }
+    }
+
+    if (!sendResult.success) {
+      // Clean up OTP record if no contact method succeeded
       await OTP.findByIdAndDelete(otpEntry._id);
       return res.status(500).json({ 
         success: false, 
@@ -516,7 +490,9 @@ exports.initiateRedemption = async (req, res) => {
       });
     }
 
-    res.status(200).json({ message: "OTP sent to customer's email.", customerEmail: customer.email });
+    // Respond with both contact fields and which channel was used
+    const via = (customer.email && emailResult && emailResult.success) ? 'email' : 'sms';
+    res.status(200).json({ message: `OTP sent to customer via ${via}.`, customerEmail: customer.email || null, customerPhone: customer.phone || null, via });
   } catch (error) {
     console.error("Redemption initiation error:", error);
     res.status(500).json({ error: "Server error during redemption initiation." });
@@ -524,15 +500,18 @@ exports.initiateRedemption = async (req, res) => {
 };
 
 exports.verifyRedemption = async (req, res) => {
-  const { otp, customerEmail } = req.body;
+  const { otp, customerEmail } = req.body; // customerEmail may be an email or phone string
 
   if (!otp || !customerEmail) {
-    res.status(400).json({ error: "OTP and customer email are required." });
+    res.status(400).json({ error: "OTP and customer contact are required." });
     return;
   }
 
   try {
-    const otpDocument = await OTP.findOne({ email: customerEmail, otp, type: 'redemption' });
+    // Determine if the provided contact is an email or phone
+    const isEmail = typeof customerEmail === 'string' && customerEmail.includes('@');
+    const query = isEmail ? { email: customerEmail } : { phone: customerEmail };
+    const otpDocument = await OTP.findOne({ ...query, otp, type: 'redemption' });
     if (!otpDocument) {
       res.status(400).json({ error: "Invalid or expired OTP." });
       return;
@@ -603,9 +582,10 @@ exports.getLoyaltyProgramMetrics = async (req, res) => {
       status: "approved",
       createdAt: { $gte: startOfMonth },
     });
+    // VisitLog uses `timestamp` field (not createdAt)
     const monthlyVisits = await VisitLog.countDocuments({
-      cafe: cafeId,
-      createdAt: { $gte: startOfMonth },
+      cafeId: cafeId,
+      timestamp: { $gte: startOfMonth },
     });
 
     // Avoid division by zero
@@ -641,24 +621,31 @@ exports.getActivityLog = async (req, res) => {
     now.setHours(0, 0, 0, 0);
 
     if (filter === 'today') {
-      query.createdAt = { $gte: now };
+      query.timestamp = { $gte: now };
     } else if (filter === 'week') {
       // Go back to the beginning of the day 7 days ago
       const startOfWeek = new Date(now);
       startOfWeek.setDate(now.getDate() - 7);
-      query.createdAt = { $gte: startOfWeek };
+      query.timestamp = { $gte: startOfWeek };
     } else if (filter === 'month') {
       // Go back to the beginning of the day 1 month ago
       const startOfMonth = new Date(now);
       startOfMonth.setMonth(now.getMonth() - 1);
-      query.createdAt = { $gte: startOfMonth };
+      query.timestamp = { $gte: startOfMonth };
     }
     // For the 'all' filter, we don't add a date constraint to the query.
     
-    // Fetch all relevant transactions from the correct model
-    const transactions = await RewardTransaction.find(query).sort({ createdAt: -1 });
+    // Fetch all relevant transactions from the correct model (use timestamp and map to createdAt for frontend compatibility)
+    const transactions = await RewardTransaction.find(query).sort({ timestamp: -1 });
 
-    res.status(200).json(transactions);
+    // Map to include `createdAt` for pages that expect that field
+    const formatted = transactions.map((t) => {
+      const obj = t.toObject ? t.toObject() : t;
+      obj.createdAt = obj.timestamp || obj.createdAt || obj._id?.getTimestamp?.() || new Date();
+      return obj;
+    });
+
+    res.status(200).json(formatted);
 
   } catch (error) {
     console.error("Activity log fetch error:", error);

@@ -13,6 +13,7 @@ function RedemptionPage() {
   const [pointsToRedeem, setPointsToRedeem] = useState("");
   const [otpInput, setOtpInput] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
+    const [customerContact, setCustomerContact] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isFetchingPoints, setIsFetchingPoints] = useState(false);
@@ -40,7 +41,10 @@ function RedemptionPage() {
     try {
         const res = await initiateRedemption(customerPhone, pointsToRedeem);
         toast.success("OTP Sent!");
-        setCustomerEmail(res.data.customerEmail);
+        // Server returns customerEmail and customerPhone and via
+        const contact = res.data.customerEmail || res.data.customerPhone || customerPhone;
+        setCustomerContact(contact);
+        setCustomerEmail(res.data.customerEmail || "");
         setStep("verifyOtp");
     } catch (err) { console.error(err); toast.error("Failed to send OTP."); } 
     finally { setIsVerifying(false); }
@@ -50,7 +54,7 @@ function RedemptionPage() {
     if (otpInput.length !== 6) return toast.error("Enter valid 6-digit OTP.");
     setIsVerifying(true);
     try {
-        const res = await verifyRedemption(otpInput, customerEmail);
+        const res = await verifyRedemption(otpInput, customerContact || customerEmail);
         toast.success("Redemption Successful!");
         // Reset Flow
         setCustomerPhone(""); setPointsToRedeem(""); setOtpInput(""); setCustomerEmail(""); setStep("inputPhone");

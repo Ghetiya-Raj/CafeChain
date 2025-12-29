@@ -3,20 +3,20 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import Loader from "../components/Loader";
 import { format } from 'date-fns';
-import { adminGetCafeById, adminUpdateCafeStatus } from "../api/api";
+import { adminGetCafeById, adminUpdateCafeStatus, adminDeleteCafe } from "../api/api";
 import { ArrowLeft, Building2, User, Phone, Mail, Calendar, Power, AlertTriangle } from "lucide-react";
 
 export default function CafeDetailPage() {
-    const { cafeId } = useParams();
+    const { id } = useParams();
     const navigate = useNavigate();
     const [cafe, setCafe] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (!cafeId) return;
+        if (!id) return;
         const fetchCafeDetails = async () => {
             try {
-                const data = await adminGetCafeById(cafeId);
+                const data = await adminGetCafeById(id);
                 setCafe(data);
             } catch (error) {
                 toast.error("Failed to fetch cafe details.");
@@ -25,15 +25,26 @@ export default function CafeDetailPage() {
             }
         };
         fetchCafeDetails();
-    }, [cafeId]);
+    }, [id]);
 
     const handleUpdateStatus = async (newStatus) => {
         try {
-            const response = await adminUpdateCafeStatus(cafeId, newStatus);
+            const response = await adminUpdateCafeStatus(id, newStatus);
             toast.success(response.message || "Status updated successfully");
             setCafe(prev => ({ ...prev, status: newStatus }));
         } catch (error) {
             toast.error("Failed to update status.");
+        }
+    };
+
+    const handleDeleteCafe = async () => {
+        if (!window.confirm('Delete this cafe and all related data? This cannot be undone.')) return;
+        try {
+            await adminDeleteCafe(id);
+            toast.success('Cafe removed');
+            navigate(-1);
+        } catch (err) {
+            toast.error('Failed to delete cafe');
         }
     };
 
@@ -48,7 +59,7 @@ export default function CafeDetailPage() {
 
             {/* Header Card */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
-                <div className="h-32 bg-[#4A3A2F] relative">
+                <div className="h-32  relative">
                     {/* Pattern Overlay */}
                     <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', backgroundSize: '20px 20px'}}></div>
                 </div>
@@ -114,6 +125,12 @@ export default function CafeDetailPage() {
                             <AlertTriangle className="w-4 h-4" /> Suspend Operations
                         </button>
                     }
+                    <button
+                        onClick={handleDeleteCafe}
+                        className="ml-2 flex items-center gap-2 bg-white text-red-600 border border-red-200 px-5 py-2.5 rounded-xl hover:bg-red-50 transition font-medium"
+                    >
+                        Delete Cafe
+                    </button>
                 </div>
             </div>
         </div>

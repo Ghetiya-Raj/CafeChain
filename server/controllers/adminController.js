@@ -6,6 +6,8 @@ const Cafe = require("../models/Cafe");
 const Event = require('../models/Event');
 const ContactUs = require('../models/ContactUs');
 const Announcement = require("../models/Announcement");
+const VisitLog = require('../models/VisitLog');
+const RewardTransaction = require('../models/RewardTransaction');
 const crypto = require("crypto");
 const RewardClaim = require("../models/RewardClaim");
 const cloudinary = require('../config/cloudinary');
@@ -194,6 +196,56 @@ exports.getCafeDetails = async (req, res) => {
   } catch (err) {
       console.error("Error fetching cafe details:", err);
       res.status(500).json({ error: "Server error fetching cafe details" });
+  }
+};
+
+// Delete a cafe and cleanup related data
+exports.deleteCafe = async (req, res) => {
+  try {
+      const cafeId = req.params.id;
+      const cafe = await Cafe.findById(cafeId);
+      if (!cafe) return res.status(404).json({ error: 'Cafe not found.' });
+
+      // Delete events for this cafe
+      await Event.deleteMany({ cafe: cafeId });
+
+      // Delete visit logs and reward transactions for this cafe
+      await VisitLog.deleteMany({ cafeId });
+      await RewardTransaction.deleteMany({ cafeId });
+
+      // Delete reward claims associated with this cafe
+      await RewardClaim.deleteMany({ cafe: cafeId });
+
+      // Remove cafe references from users (favoriteCafes and points entries)
+      try {
+        await User.updateMany(
+          {},
+          { $pull: { favoriteCafes: cafe._id, points: { cafeId: cafe._id } } }
+        );
+      } catch (updateErr) {
+        console.error('Error removing cafe references from users:', updateErr);
+      }
+
+      // Optionally remove cafe images from Cloudinary
+      try {
+        if (cafe.images && cafe.images.length) {
+          for (const img of cafe.images) {
+            if (img.public_id) {
+              await cloudinary.uploader.destroy(img.public_id);
+            }
+          }
+        }
+      } catch (imgErr) {
+        console.error('Error deleting cafe images from Cloudinary:', imgErr);
+      }
+
+      // Finally delete the cafe document
+      await Cafe.findByIdAndDelete(cafeId);
+
+      res.json({ message: 'Cafe and related records deleted successfully.' });
+  } catch (err) {
+      console.error('Error deleting cafe:', err);
+      res.status(500).json({ error: 'Server error deleting cafe.' });
   }
 };
 
@@ -541,5 +593,38 @@ exports.getDashboardStats = async (req, res) => {
   } catch (error) {
     console.error("Dashboard Stats Error:", error);
     res.status(500).json({ error: "Server error fetching stats" });
+  }
+};
+
+// Delete a user and their related records
+exports.deleteUser = async (req, res) => {
+  try {
+      const userId = req.params.id;
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ error: 'User not found.' });
+
+      // Delete related visit logs and reward transactions
+      await VisitLog.deleteMany({ userId });
+      await RewardTransaction.deleteMany({ userId });
+
+      // Delete any reward claims associated with the user
+      await RewardClaim.deleteMany({ user: userId });
+
+      // Optionally remove user's profile image from Cloudinary
+      try {
+        if (user.profilePicId) {
+          await cloudinary.uploader.destroy(user.profilePicId);
+        }
+      } catch (imgErr) {
+        console.error('Error deleting user image from Cloudinary:', imgErr);
+      }
+
+      // Finally delete the user document
+      await User.findByIdAndDelete(userId);
+
+      res.json({ message: 'User and related records deleted successfully.' });
+  } catch (err) {
+      console.error('Error deleting user:', err);
+      res.status(500).json({ error: 'Server error deleting user.' });
   }
 };
