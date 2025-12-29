@@ -125,7 +125,7 @@ export const adminCreateEvent = async (formData) => {
     const response = await adminApiClient.post('/events', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
-    toast.success('Event created successfully');
+    toast.success('Event created successfully!');
     return response.data;
   } catch (error) {
     toast.error(error.response?.data?.error || 'Failed to create event.');
