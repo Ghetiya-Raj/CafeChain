@@ -190,7 +190,9 @@ exports.loginCafe = async (req, res) => {
 
   const { email, password } = req.body;
   try {
+    console.log("Cafe login attempt for email:", email);
     const cafe = await Cafe.findOne({ email });
+    console.log("Cafe found for login:", cafe ? cafe._id : null);
     if (!cafe) {
       return res.status(404).json({ error: "No account found with this email." });
     }

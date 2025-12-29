@@ -216,6 +216,8 @@ exports.approveCafe = async (req, res) => {
           return res.status(404).json({ error: "Pending application not found." });
       }
 
+    console.log("Approving pending cafe:", pendingCafeId, "email:", pendingData.email);
+
       // Create a single new Cafe document from the pending data
       const newCafe = new Cafe({
           name: pendingData.name,
@@ -234,7 +236,17 @@ exports.approveCafe = async (req, res) => {
           status: "active",
       });
 
-      await newCafe.save();
+      try {
+        await newCafe.save();
+        console.log("New cafe created with id:", newCafe._id);
+      } catch (saveErr) {
+        console.error("Error saving new cafe:", saveErr);
+        if (saveErr.code === 11000) {
+          // Duplicate key error (unique index violation)
+          return res.status(409).json({ error: "A cafe with the same unique field (email/phone/code) already exists." });
+        }
+        throw saveErr;
+      }
 
       // ✅ Updated to use Brevo sendEmail
       const emailResult = await sendEmail(
