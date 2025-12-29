@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL;
+const API_URL = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE = API_URL.endsWith('/api') ? API_URL : API_URL.replace(/\/+$/, '') + '/api';
 
 const apiClient = async (endpoint, data = {}, options = {}) => {
   const token = localStorage.getItem('authToken');
@@ -16,7 +17,7 @@ const apiClient = async (endpoint, data = {}, options = {}) => {
   try {
     const response = await axios({
       method: options.method || 'GET',
-      url: `${API_URL}${endpoint}`, // ✅ Uses the Env Variable
+      url: `${API_BASE}${endpoint}`, // ✅ Uses the normalized API base URL
       data: options.method === 'POST' || options.method === 'PUT' ? data : null,
       headers,
       withCredentials: options.withCredentials || false,
@@ -65,7 +66,7 @@ export const claimReward = (formData) =>
 export const getActiveEvents = async () => {
   try {
     // Uses the same API_URL variable
-    const response = await fetch(`${API_URL}/events/active`);
+    const response = await fetch(`${API_BASE}/events/active`);
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }

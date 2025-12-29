@@ -1,11 +1,12 @@
 import axios from 'axios';
 import { toast } from 'sonner';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE = BASE_URL.endsWith('/api') ? BASE_URL : BASE_URL.replace(/\/+$/, '') + '/api';
 
 // Create an Axios instance for Cafe Owner routes
 const apiClient = axios.create({
-  baseURL: `${BASE_URL}/cafe-owner`, // Points to /api/cafe-owner
+  baseURL: `${API_BASE}/cafe-owner`, // Points to /api/cafe-owner
 });
 
 // Add a request interceptor to include the auth token
@@ -46,7 +47,7 @@ export const getActivityLog = (timeFilter) => {
 // Events (Note: This points to /api/events, not /api/cafe-owner/events)
 export const getActiveEvents = async () => {
   try {
-    const response = await axios.get(`${BASE_URL}/events/active`);
+    const response = await axios.get(`${API_BASE}/events/active`);
     return response.data;
   } catch (error) {
     const errorMessage = error.response?.data?.error || 'Failed to fetch events.';
@@ -81,7 +82,7 @@ export const verifyRedemption = (otp, customerEmail) => {
 };
 
 // Public Data (Fetches all cafes)
-export const getAllCafes = () => axios.get(`${BASE_URL}/cafes`);
+export const getAllCafes = () => axios.get(`${API_BASE}/cafes`);
 
 // Contact
 export const submitContactForm = (data) => apiClient.post('/contact-us', data);

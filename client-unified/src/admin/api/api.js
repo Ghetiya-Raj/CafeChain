@@ -3,10 +3,11 @@
 import axios from 'axios';
 import { toast } from 'sonner';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE = API_BASE_URL.endsWith('/api') ? API_BASE_URL : API_BASE_URL.replace(/\/+$/, '') + '/api';
 
 const adminApiClient = axios.create({
-  baseURL: `${API_BASE_URL}/admin`, 
+  baseURL: `${API_BASE}/admin`, 
 });
 
 // Interceptor to add the auth token
@@ -177,7 +178,7 @@ export const createAnnouncement = async (data) => {
 };
 
 export const adminGetAnnouncements = async () => {
-  const response = await axios.get(`${API_BASE_URL}/users/announcements`);
+  const response = await axios.get(`${API_BASE}/users/announcements`);
   return response.data;
 };
 
